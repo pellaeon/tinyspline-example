@@ -11,6 +11,9 @@ tsBSpline spline;
 GLUnurbsObj *theNurb;
 float u = 0.f;
 
+unsigned int n_ctrlp;
+FILE* file_p;
+
 /********************************************************
 *                                                       *
 * Modify these lines for experimenting.                 *
@@ -18,66 +21,37 @@ float u = 0.f;
 ********************************************************/
 void setup()
 {
-    ts_bspline_new(3, 3, 13, TS_CLAMPED ,&spline);
+	printf("asdasd");
+	file_p = fopen("input.txt", "r");
+	fscanf(file_p, "n_ctrlp: %u\n", &n_ctrlp);
+	printf("====: %u\n", n_ctrlp);
+
+    ts_bspline_new(3, 3, n_ctrlp, TS_CLAMPED ,&spline);
     const float w = (float)(sqrt(2.f) / 2.f);
     
-    spline.ctrlp[0] = 125.672848f;
-    spline.ctrlp[1] = -138.790728f;
-    spline.ctrlp[2] = 0.000000f;
-    spline.ctrlp[3] = 125.672848f;
-    spline.ctrlp[4] = -152.597846f;
-    spline.ctrlp[5] = 0.000000f;
-    spline.ctrlp[6] = 118.957119f;
-    spline.ctrlp[7] = -163.790728f;
-    spline.ctrlp[8] = 0.000000f;
-    spline.ctrlp[9] = 110.672848f;
-    spline.ctrlp[10] = -163.790728f;
-    spline.ctrlp[11] = 0.000000f;
-    spline.ctrlp[12] = 102.388577f;
-    spline.ctrlp[13] = -163.790728f;
-    spline.ctrlp[14] = 0.000000f;
-    spline.ctrlp[15] = 95.672848f;
-    spline.ctrlp[16] = -152.597846f;
-    spline.ctrlp[17] = 0.000000f;
-    spline.ctrlp[18] = 95.672848f;
-    spline.ctrlp[19] = -138.790728f;
-    spline.ctrlp[20] = 0.000000f;
-    spline.ctrlp[21] = 95.672848f;
-    spline.ctrlp[22] = -124.983609f;
-    spline.ctrlp[23] = 0.000000f;
-    spline.ctrlp[24] = 102.388577f;
-    spline.ctrlp[25] = -113.790728f;
-    spline.ctrlp[26] = 0.000000f;
-    spline.ctrlp[27] = 110.672848f;
-    spline.ctrlp[28] = -113.790728f;
-    spline.ctrlp[29] = 0.000000f;
-    spline.ctrlp[30] = 118.957119f;
-    spline.ctrlp[31] = -113.790728f;
-    spline.ctrlp[32] = 0.000000f;
-    spline.ctrlp[33] = 125.672848f;
-    spline.ctrlp[34] = -124.983609f;
-    spline.ctrlp[35] = 0.000000f;
-    spline.ctrlp[36] = 125.672848f;
-    spline.ctrlp[37] = -138.790728f;
-    spline.ctrlp[38] = 0.f;
-    spline.knots[0] = 0.000000f;
-    spline.knots[1] = 0.000000f;
-    spline.knots[2] = 0.000000f;
-    spline.knots[3] = 0.000000f;
-    spline.knots[4] = 1.000000f;
-    spline.knots[5] = 1.000000f;
-    spline.knots[6] = 1.000000f;
-    spline.knots[7] = 2.000000f;
-    spline.knots[8] = 2.000000f;
-    spline.knots[9] = 2.000000f;
-    spline.knots[10] = 3.000000f;
-    spline.knots[11] = 3.000000f;
-    spline.knots[12] = 3.000000f;
-    spline.knots[13] = 4.000000f;
-    spline.knots[14] = 4.000000f;
-    spline.knots[15] = 4.000000f;
-    spline.knots[16] = 4.000000f;
+	float x,y,z;
+	int i=0;
+	fpos_t orig;
+	while( !fgetpos(file_p, &orig) && fscanf(file_p, "ctrlp: %f %f %f\n", &x, &y, &z) == 3 ) {
+		spline.ctrlp[i] = x;
+		i++;
+		spline.ctrlp[i] = y;
+		i++;
+		spline.ctrlp[i] = z;
+		i++;
+	}
+	fsetpos(file_p, &orig);
 
+	if ( i != n_ctrlp*3 ) {
+		printf("Some control points might be missing\n");
+	}
+
+	int j=0;
+	float knot_val;
+	while( fscanf(file_p, "knot: %f\n", &knot_val) == 1 ) {
+		spline.knots[j] = knot_val;
+		j++;
+	}
 }
 
 void tear_down()
@@ -107,10 +81,14 @@ void display(void)
     // draw control points
     glColor3f(1.0, 0.0, 0.0);
     glPointSize(5.0);
+	float j=0;
     size_t i;
     glBegin(GL_POINTS);
-      for (i = 0; i < spline.n_ctrlp; i++) 
+      for (i = 0; i < spline.n_ctrlp; i++) {
+		  j+=1.0/n_ctrlp;
+		  glColor3f(0.0, j, 0.0);
          glVertex3fv(&spline.ctrlp[i * spline.dim]);
+	  }
     glEnd();
     
     // draw evaluation
@@ -175,6 +153,7 @@ void reshape(int w, int h)
 
 int main(int argc, char** argv)
 {
+	printf("asdasd");
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize (500, 500);
